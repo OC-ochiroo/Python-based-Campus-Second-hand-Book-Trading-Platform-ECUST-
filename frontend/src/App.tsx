@@ -1,121 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+// ── Types ──────────────────────────────────────────────────────────────────
+import type { Page } from "./Types";
+
+// ── Stars component ────────────────────────────────────────────────────────
+import Stars from "./components/Stars";
+
+// ── Book Card ──────────────────────────────────────────────────────────────
+import BookCard from "./components/BookCard";
+
+// ── Button helper ──────────────────────────────────────────────────────────
+import Btn from "./components/Btn";
+
+// ── Navbar ─────────────────────────────────────────────────────────────────
+import Navbar from "./components/Navbar";
+
+// ── HOME PAGE ──────────────────────────────────────────────────────────────
+import HomePage from "./pages/HomePage";
+
+// ── AUTH PAGE ──────────────────────────────────────────────────────────────
+import AuthPage from "./pages/AuthPage";
+
+// ── FEED PAGE ──────────────────────────────────────────────────────────────
+import FeedPage from "./pages/FeedPage";
+
+// ── PROFILE PAGE ───────────────────────────────────────────────────────────
+import ProfilePage from "./pages/ProfilePage";
+
+// ── MY POSTS PAGE ──────────────────────────────────────────────────────────
+import MyPostsPage from "./pages/MyPostsPage";
+
+// ── ROOT APP ───────────────────────────────────────────────────────────────
+export default function App() {
+  const [page, setPage] = useState<Page>("home");
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const navigate = (p: Page) => {
+    if ((p === "feed" || p === "profile" || p === "my-posts") && !loggedIn) {
+      setPage("auth");
+    } else {
+      setPage(p);
+    }
+  };
 
   return (
-    <>
-      <section id="container">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "'Space Mono', monospace" }}>
+      {/* Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Space+Mono:wght@400;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #fff; }
+        ::placeholder { color: #ccc; }
+        input { -webkit-appearance: none; }
+      `}</style>
 
-      <div className="ticks"></div>
+      <Navbar page={page} setPage={navigate} loggedIn={loggedIn} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {page === "home" && <HomePage setPage={navigate} />}
+      {page === "auth" && <AuthPage setPage={navigate} setLoggedIn={setLoggedIn} />}
+      {page === "feed" && <FeedPage />}
+      {page === "profile" && <ProfilePage setPage={navigate} />}
+      {page === "my-posts" && <MyPostsPage />}
+    </div>
+  );
 }
-
-export default App
