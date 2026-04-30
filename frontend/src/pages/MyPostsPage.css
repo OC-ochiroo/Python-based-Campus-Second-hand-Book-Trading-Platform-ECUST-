@@ -1,0 +1,8 @@
+.my-posts__empty {
+  padding: 80px 0;
+  text-align: center;
+  color: var(--color-ink-ghost);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}

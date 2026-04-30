@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Space+Mono:wght@400;700&display=swap');
+
+/* ── Tokens ─────────────────────────────── */
+:root {
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-mono: 'Space Mono', monospace;
+
+  --color-ink: #111;
+  --color-ink-soft: #555;
+  --color-ink-muted: #999;
+  --color-ink-faint: #bbb;
+  --color-ink-ghost: #ccc;
+  --color-border: #e8e8e8;
+  --color-border-light: #ececec;
+  --color-border-input: #ddd;
+
+  --color-accent: #FF4343;
+  --color-accent-hover: #F76B6B;
+  --color-accent-soft: rgba(255, 67, 67, 0.08);
+}
+
+/* ── Page layout ─────────────────────────── */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 40px;
+}
+
+.page__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.page__title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: var(--color-ink);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.page__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-border);
+  margin-bottom: 32px;
+}
+
+/* ── Form fields ─────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field__label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-ink-faint);
+  font-weight: 400;
+  display: block;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.field__input {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--color-border-input);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  outline: none;
+  background: transparent;
+  box-sizing: border-box;
+  color: var(--color-ink);
+  transition: border-color 0.2s;
+  border-radius: 0;
+}
+
+.field__input:focus {
+  border-color: var(--color-ink);
+}
+
+/* ── Ghost button ────────────────────────── */
+.ghost-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0;
+}
