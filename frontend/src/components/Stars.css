@@ -1,0 +1,11 @@
+.stars {
+  color: var(--color-accent);
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+}
+
+.stars__rating {
+  color: var(--color-ink-muted);
+  margin-left: 8px;
+  font-family: var(--font-mono);
+}
