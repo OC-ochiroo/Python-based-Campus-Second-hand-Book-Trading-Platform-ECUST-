@@ -1,27 +1,41 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
-import Layout from "./components/Layout";
-import HomePage from "./pages/HomePage";
-import AuthPage from "./pages/AuthPage";
-import FeedPage from "./pages/FeedPage";
-import ProfilePage from "./pages/ProfilePage";
-import MyPostsPage from "./pages/MyPostsPage";
-import "./App.css";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './AuthContext'
+import Layout from './components/Layout'
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import FeedPage from './pages/FeedPage'
+import ProfilePage from './pages/ProfilePage'
+import MyPostsPage from './pages/MyPostsPage'
+import './App.css'
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth()
+  return isLoggedIn ? <>{children}</> : <Navigate to="/login" />
+}
+
+function AppRoutes() {
+  const { isLoggedIn } = useAuth()
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={isLoggedIn ? <Navigate to="/feed" /> : <LoginPage />} />
+        <Route path="/register" element={isLoggedIn ? <Navigate to="/feed" /> : <RegisterPage />} />
+        <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/my-posts" element={<ProtectedRoute><MyPostsPage /></ProtectedRoute>} />
+      </Route>
+    </Routes>
+  )
+}
 
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<Layout loggedIn={loggedIn} />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/auth" element={<AuthPage setLoggedIn={setLoggedIn} />} />
-          <Route path="/feed" element={loggedIn ? <FeedPage /> : <Navigate to="/auth" />} />
-          <Route path="/profile" element={loggedIn ? <ProfilePage /> : <Navigate to="/auth" />} />
-          <Route path="/my-posts" element={loggedIn ? <MyPostsPage /> : <Navigate to="/auth" />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
-  );
+  )
 }

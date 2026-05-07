@@ -1,11 +1,11 @@
-import { Outlet } from "react-router-dom";
-import Navbar from "./Navbar";
+import { Outlet } from 'react-router-dom'
+import Navbar from './Navbar'
 
-export default function Layout({ loggedIn }: { loggedIn: boolean }) {
+export default function Layout() {
   return (
     <div className="app">
-      <Navbar loggedIn={loggedIn} />
+      <Navbar />
       <Outlet />
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import type { Book } from "./Types";
+import type { Book } from "./types";
 
 export const BOOKS: Book[] = [
   { id: 1, title: "The Pragmatic Programmer", author: "David Thomas", rating: 4.5, description: "...", owner: "alice_tw", cover: "#2c3e50", spine: "#1a252f" },

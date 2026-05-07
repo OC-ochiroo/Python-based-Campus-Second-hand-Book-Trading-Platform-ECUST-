@@ -1,4 +1,4 @@
-import type { Book } from "../Types";
+import type { Book } from "../types";
 import Btn from "./Btn";
 import Stars from "./Stars";
 import "./BookCard.css";

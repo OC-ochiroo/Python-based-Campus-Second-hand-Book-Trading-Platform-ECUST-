@@ -1,15 +1,60 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { MY_BOOKS } from "../data";
-import Stars from "../components/Stars";
-import "./ProfilePage.css";
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { profileSchema, type ProfileFormData } from '../schemas'
+import { useAuth } from '../AuthContext'
+import { MY_BOOKS } from '../data'
+import Stars from '../components/Stars'
+import api from '../api'
+import './ProfilePage.css'
 
 export default function ProfilePage() {
-  const [editing, setEditing] = useState(false);
-  const [username, setUsername] = useState("alex_reader");
-  const [wechat, setWechat] = useState("alex_wechat");
-  const [city, setCity] = useState("Taichung / NCHU");
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { user, setUser } = useAuth()
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+    setError,
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name || '',
+      wechat_username: user?.wechat_username || '',
+      age: user?.age,
+    },
+  })
+
+  // Sync form if user changes
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name,
+        wechat_username: user.wechat_username || '',
+        age: user.age,
+      })
+    }
+  }, [user, reset])
+
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      const res = await api.put('/users/me', {
+        name: data.name,
+        wechat_username: data.wechat_username || undefined,
+        age: data.age || undefined,
+      })
+      setUser(res.data)
+      reset(data) // clears isDirty
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Failed to save changes'
+      setError('root', { message: msg })
+    }
+  }
+
+  const initials = user?.name?.charAt(0).toUpperCase() || '?'
 
   return (
     <div className="page">
@@ -19,44 +64,79 @@ export default function ProfilePage() {
       <div className="profile__grid">
         <div className="profile__left">
           <div className="profile__avatar-wrap">
-            <div className="profile__avatar">A</div>
+            <div className="profile__avatar">{initials}</div>
           </div>
 
-          <div className="profile__fields">
-            {[
-              { label: "Username", value: username, setter: setUsername },
-              { label: "WeChat username", value: wechat, setter: setWechat },
-              { label: "University / City", value: city, setter: setCity },
-            ].map(f => (
-              <div className="field" key={f.label}>
-                <label className="field__label">{f.label}</label>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            {errors.root && (
+              <div className="profile__error-banner">{errors.root.message}</div>
+            )}
+
+            <div className="profile__fields">
+              <div className="field">
+                <label className="field__label">Name</label>
+                <input
+                  className={`field__input ${errors.name ? 'field__input--error' : ''}`}
+                  {...register('name')}
+                />
+                {errors.name && <span className="profile__error">{errors.name.message}</span>}
+              </div>
+
+              <div className="field">
+                <label className="field__label">Email</label>
                 <input
                   className="field__input"
-                  value={f.value}
-                  readOnly={!editing}
-                  onChange={e => f.setter(e.target.value)}
+                  value={user?.email || ''}
+                  readOnly
+                  style={{ color: 'var(--color-ink-muted)' }}
                 />
               </div>
-            ))}
-          </div>
 
-          <div className="profile__actions">
-            <button
-              className={`profile__btn profile__btn--edit ${editing ? "active" : ""}`}
-              onClick={() => setEditing(!editing)}
-            >
-              {editing ? "Save" : "Edit profile"}
-            </button>
-            <button className="profile__btn profile__btn--delete">
-              Delete profile
-            </button>
-          </div>
+              <div className="field">
+                <label className="field__label">WeChat username</label>
+                <input
+                  className="field__input"
+                  placeholder="your_wechat_id"
+                  {...register('wechat_username')}
+                />
+              </div>
+
+              <div className="field">
+                <label className="field__label">Age</label>
+                <input
+                  className={`field__input ${errors.age ? 'field__input--error' : ''}`}
+                  type="number"
+                  placeholder="22"
+                  {...register('age', { valueAsNumber: true })}
+                />
+                {errors.age && <span className="profile__error">{errors.age.message}</span>}
+              </div>
+            </div>
+
+            <div className="profile__actions">
+              <button
+                type="submit"
+                className={`profile__btn profile__btn--edit ${isDirty ? 'active' : ''}`}
+                disabled={!isDirty || isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : isDirty ? 'Save changes' : 'No changes'}
+              </button>
+              <button
+                type="button"
+                className="profile__btn profile__btn--delete"
+                onClick={() => reset()}
+                disabled={!isDirty}
+              >
+                Discard
+              </button>
+            </div>
+          </form>
         </div>
 
         <div className="profile__right">
           <div className="page__header" style={{ marginBottom: 28 }}>
             <h3 className="profile__recent-title">Recent posts</h3>
-            <button className="ghost-btn" onClick={() => navigate("/my-posts")}>
+            <button className="ghost-btn" onClick={() => navigate('/my-posts')}>
               My posts →
             </button>
           </div>
@@ -74,5 +154,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
