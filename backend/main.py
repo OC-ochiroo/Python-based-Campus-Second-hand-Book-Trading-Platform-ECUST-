@@ -1,21 +1,27 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Book Trading Platform API")
+import models
+from database import engine
+from routers import router
 
-# CORS configuration for frontend
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for your frontend URL in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"message": "Campus Second-hand Book Trading Platform API"}
+app.include_router(router)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/")
+def root():
+    return {
+        "message": "Backend running"
+    }
