@@ -1,10 +1,22 @@
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema, type RegisterFormData } from '../schemas'
+import { z } from 'zod'
 import { useAuth } from '../AuthContext'
 import api from '../api'
 import './AuthPage.css'
+
+const registerSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -20,11 +32,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const res = await api.post('/auth/register', {
-        name: data.name,
+        username: data.username,
         email: data.email,
         password: data.password,
-        wechat_username: data.wechat_username || undefined,
-        age: data.age || undefined,
       })
       setUser(res.data.user)
       navigate('/feed')
@@ -52,13 +62,13 @@ export default function RegisterPage() {
           )}
 
           <div className="auth__field">
-            <label className="auth__label">Name</label>
+            <label className="auth__label">Username</label>
             <input
-              className={`auth__input ${errors.name ? 'auth__input--error' : ''}`}
-              placeholder="Your name"
-              {...register('name')}
+              className={`auth__input ${errors.username ? 'auth__input--error' : ''}`}
+              placeholder="your_username"
+              {...register('username')}
             />
-            {errors.name && <span className="auth__error">{errors.name.message}</span>}
+            {errors.username && <span className="auth__error">{errors.username.message}</span>}
           </div>
 
           <div className="auth__field">
@@ -83,7 +93,7 @@ export default function RegisterPage() {
             {errors.password && <span className="auth__error">{errors.password.message}</span>}
           </div>
 
-          <div className="auth__field">
+          <div className="auth__field auth__field--last">
             <label className="auth__label">Confirm Password</label>
             <input
               className={`auth__input ${errors.confirmPassword ? 'auth__input--error' : ''}`}
@@ -92,26 +102,6 @@ export default function RegisterPage() {
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && <span className="auth__error">{errors.confirmPassword.message}</span>}
-          </div>
-
-          <div className="auth__field">
-            <label className="auth__label">WeChat username <span className="auth__optional">(optional)</span></label>
-            <input
-              className="auth__input"
-              placeholder="your_wechat_id"
-              {...register('wechat_username')}
-            />
-          </div>
-
-          <div className="auth__field auth__field--last">
-            <label className="auth__label">Age <span className="auth__optional">(optional)</span></label>
-            <input
-              className={`auth__input ${errors.age ? 'auth__input--error' : ''}`}
-              type="number"
-              placeholder="22"
-              {...register('age', { valueAsNumber: true })}
-            />
-            {errors.age && <span className="auth__error">{errors.age.message}</span>}
           </div>
 
           <button className="auth__submit" type="submit" disabled={isSubmitting}>
