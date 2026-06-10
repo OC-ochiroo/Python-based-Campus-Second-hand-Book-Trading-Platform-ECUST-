@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './AuthContext'
+import { AuthProvider } from './AuthContext'
+import { useAuth } from './useAuth'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -10,12 +11,16 @@ import MyPostsPage from './pages/MyPostsPage'
 import './App.css'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, isLoading } = useAuth()
+  if (isLoading) return <div>Loading...</div>
   return isLoggedIn ? <>{children}</> : <Navigate to="/login" />
 }
 
 function AppRoutes() {
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, isLoading } = useAuth()
+
+  if (isLoading) return <div>Loading...</div>
+
   return (
     <Routes>
       <Route element={<Layout />}>

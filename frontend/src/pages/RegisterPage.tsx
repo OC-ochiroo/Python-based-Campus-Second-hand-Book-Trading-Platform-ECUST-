@@ -2,7 +2,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAuth } from '../AuthContext'
+import { useAuth } from '../useAuth'
 import api from '../api'
 import './AuthPage.css'
 
