@@ -1,47 +1,31 @@
-from flask import Flask, jsonify
-from models import db, User
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-app = Flask(__name__)
+import models
+from database import engine
+from routers import router
 
-# Database config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+models.Base.metadata.create_all(bind=engine)
 
-db.init_app(app)
+app = FastAPI()
 
-# Force recreate database cleanly
-with app.app_context():
-    print("Creating fresh database...")
-    db.drop_all()     #  deletes old tables if any
-    db.create_all()   
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route("/")
-def home():
-    return "Backend running!"
+app.include_router(router)
 
-@app.route("/test")
-def test():
-    return "DB connected!"
 
-@app.route("/add_user")
-def add_user():
-    user = User(name="Ochir", email="test@test.com")
-    db.session.add(user)
-    db.session.commit()
-    return "User added!"
+@app.get("/")
+def root():
+    return {"message": "Backend running"}
 
-@app.route("/users")
-def get_users():
-    users = User.query.all()
-    return jsonify([
-        {
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "wechat": u.wechat_username
-        }
-        for u in users
-    ])
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import uvicorn
+
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
