@@ -1,22 +1,11 @@
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { registerSchema, type RegisterFormData } from '../schemas'
 import { useAuth } from '../AuthContext'
 import api from '../api'
+import LoadingSpinner from '../components/LoadingSpinner'
 import './AuthPage.css'
-
-const registerSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
-
-type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -32,14 +21,17 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const res = await api.post('/auth/register', {
-        username: data.username,
+        name: data.name,
         email: data.email,
         password: data.password,
+        wechat_username: data.wechat_username || undefined,
+        age: data.age || undefined,
       })
       setUser(res.data.user)
       navigate('/feed')
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Registration failed'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      const msg = axiosErr?.response?.data?.detail ?? 'Registration failed'
       setError('root', { message: msg })
     }
   }
@@ -58,54 +50,40 @@ export default function RegisterPage() {
           <h2 className="auth__title">Book2Go</h2>
 
           {errors.root && (
-            <div className="auth__error-banner">{errors.root.message}</div>
+            <div className="auth__error-banner" role="alert">{errors.root.message}</div>
           )}
 
           <div className="auth__field">
-            <label className="auth__label">Username</label>
-            <input
-              className={`auth__input ${errors.username ? 'auth__input--error' : ''}`}
-              placeholder="your_username"
-              {...register('username')}
-            />
-            {errors.username && <span className="auth__error">{errors.username.message}</span>}
+            <label className="auth__label">Name</label>
+            <input className={`auth__input ${errors.name ? 'auth__input--error' : ''}`}
+              placeholder="Your full name" {...register('name')} aria-invalid={!!errors.name} />
+            {errors.name && <span className="auth__error" role="alert">{errors.name.message}</span>}
           </div>
 
           <div className="auth__field">
             <label className="auth__label">Email</label>
-            <input
-              className={`auth__input ${errors.email ? 'auth__input--error' : ''}`}
-              type="email"
-              placeholder="you@university.edu"
-              {...register('email')}
-            />
-            {errors.email && <span className="auth__error">{errors.email.message}</span>}
+            <input className={`auth__input ${errors.email ? 'auth__input--error' : ''}`}
+              type="email" placeholder="you@university.edu" {...register('email')} aria-invalid={!!errors.email} />
+            {errors.email && <span className="auth__error" role="alert">{errors.email.message}</span>}
           </div>
 
           <div className="auth__field">
             <label className="auth__label">Password</label>
-            <input
-              className={`auth__input ${errors.password ? 'auth__input--error' : ''}`}
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-            />
-            {errors.password && <span className="auth__error">{errors.password.message}</span>}
+            <input className={`auth__input ${errors.password ? 'auth__input--error' : ''}`}
+              type="password" placeholder="••••••••" {...register('password')} aria-invalid={!!errors.password} />
+            {errors.password && <span className="auth__error" role="alert">{errors.password.message}</span>}
           </div>
 
           <div className="auth__field auth__field--last">
             <label className="auth__label">Confirm Password</label>
-            <input
-              className={`auth__input ${errors.confirmPassword ? 'auth__input--error' : ''}`}
-              type="password"
-              placeholder="••••••••"
-              {...register('confirmPassword')}
-            />
-            {errors.confirmPassword && <span className="auth__error">{errors.confirmPassword.message}</span>}
+            <input className={`auth__input ${errors.confirmPassword ? 'auth__input--error' : ''}`}
+              type="password" placeholder="••••••••" {...register('confirmPassword')}
+              aria-invalid={!!errors.confirmPassword} />
+            {errors.confirmPassword && <span className="auth__error" role="alert">{errors.confirmPassword.message}</span>}
           </div>
 
           <button className="auth__submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account...' : 'Create account'}
+            {isSubmitting ? <><LoadingSpinner size="sm" message="" /> Creating…</> : 'Create account'}
           </button>
 
           <p className="auth__footer">

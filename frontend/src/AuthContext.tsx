@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { User } from './types'
+import type { User } from './Types'
 
 interface AuthContextType {
   user: User | null
@@ -13,9 +14,7 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-
   const logout = () => setUser(null)
-
   return (
     <AuthContext.Provider value={{ user, setUser, isLoggedIn: !!user, logout }}>
       {children}
