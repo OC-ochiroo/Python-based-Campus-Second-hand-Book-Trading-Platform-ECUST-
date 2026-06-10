@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '../schemas'
 import { useAuth } from '../useAuth'
 import api from '../api'
+import LoadingSpinner from '../components/LoadingSpinner'
 import './AuthPage.css'
 
 export default function LoginPage() {
@@ -22,9 +23,9 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', data)
       setUser(res.data.user)
       navigate('/feed')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Invalid email or password'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      const msg = axiosErr?.response?.data?.detail ?? 'Invalid email or password'
       setError('root', { message: msg })
     }
   }
@@ -43,7 +44,7 @@ export default function LoginPage() {
           <h2 className="auth__title">Book2Go</h2>
 
           {errors.root && (
-            <div className="auth__error-banner">{errors.root.message}</div>
+            <div className="auth__error-banner" role="alert">{errors.root.message}</div>
           )}
 
           <div className="auth__field">
@@ -53,8 +54,9 @@ export default function LoginPage() {
               type="email"
               placeholder="you@university.edu"
               {...register('email')}
+              aria-invalid={!!errors.email}
             />
-            {errors.email && <span className="auth__error">{errors.email.message}</span>}
+            {errors.email && <span className="auth__error" role="alert">{errors.email.message}</span>}
           </div>
 
           <div className="auth__field auth__field--last">
@@ -64,12 +66,13 @@ export default function LoginPage() {
               type="password"
               placeholder="••••••••"
               {...register('password')}
+              aria-invalid={!!errors.password}
             />
-            {errors.password && <span className="auth__error">{errors.password.message}</span>}
+            {errors.password && <span className="auth__error" role="alert">{errors.password.message}</span>}
           </div>
 
           <button className="auth__submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Logging in...' : 'Log in'}
+            {isSubmitting ? <LoadingSpinner size="sm" message="" /> : 'Log in'}
           </button>
 
           <p className="auth__footer">

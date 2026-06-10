@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './AuthContext'
 import { useAuth } from './useAuth'
+import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -27,9 +28,27 @@ function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={isLoggedIn ? <Navigate to="/feed" /> : <LoginPage />} />
         <Route path="/register" element={isLoggedIn ? <Navigate to="/feed" /> : <RegisterPage />} />
-        <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/my-posts" element={<ProtectedRoute><MyPostsPage /></ProtectedRoute>} />
+        <Route path="/feed" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <FeedPage />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <ProfilePage />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
+        <Route path="/my-posts" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <MyPostsPage />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
       </Route>
     </Routes>
   )
@@ -39,7 +58,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ErrorBoundary>
+          <AppRoutes />
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   )
