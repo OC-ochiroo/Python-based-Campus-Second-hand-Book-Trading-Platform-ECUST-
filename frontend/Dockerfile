@@ -7,6 +7,10 @@ RUN npm run build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /app/dist
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 EXPOSE 5173
-CMD ["nginx", "-g", "daemon off;"]
+
+# Use envsubst to replace variables in nginx config
+RUN apk add --no-cache gettext
+
+CMD ["sh", "-c", "envsubst '\\$BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
