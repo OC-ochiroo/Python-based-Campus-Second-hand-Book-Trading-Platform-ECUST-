@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../useAuth'
-import api from '../api'
 import Btn from './Btn'
 import './Navbar.css'
 

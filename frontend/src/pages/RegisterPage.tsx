@@ -38,6 +38,7 @@ export default function RegisterPage() {
       })
       setUser(res.data.user)
       navigate('/feed')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Registration failed'
       setError('root', { message: msg })

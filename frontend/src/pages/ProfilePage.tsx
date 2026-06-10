@@ -48,6 +48,7 @@ export default function ProfilePage() {
       })
       setUser(res.data)
       reset(data) // clears isDirty
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Failed to save changes'
       setError('root', { message: msg })

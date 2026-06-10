@@ -22,6 +22,7 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', data)
       setUser(res.data.user)
       navigate('/feed')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Invalid email or password'
       setError('root', { message: msg })
