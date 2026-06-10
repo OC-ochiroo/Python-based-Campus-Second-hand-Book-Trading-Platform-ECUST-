@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../AuthContext'
-import api from '../api'
+import { useAuth } from '../useAuth'
 import Btn from './Btn'
 import './Navbar.css'
 
@@ -10,12 +9,7 @@ export default function Navbar() {
   const { isLoggedIn, logout } = useAuth()
 
   const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout')
-    } catch {
-      // clear local state regardless
-    }
-    logout()
+    await logout()
     navigate('/')
   }
 
