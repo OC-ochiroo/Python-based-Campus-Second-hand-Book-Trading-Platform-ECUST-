@@ -11,13 +11,10 @@ export interface Book {
   spine: string
 }
 
-// API types matching backend models
 export interface User {
   id: number
-  name: string
+  username: string
   email: string
-  wechat_username?: string
-  age?: number
 }
 
 export interface Post {

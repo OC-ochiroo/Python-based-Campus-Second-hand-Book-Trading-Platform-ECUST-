@@ -5,12 +5,14 @@ import BookCard from "../components/BookCard";
 import BookCardSkeleton from "../components/BookCardSkeleton";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Btn from "../components/Btn";
+import AddPostModal from "../components/AddPostModal";
 import "./MyPostsPage.css";
 
 export default function MyPostsPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,7 +20,6 @@ export default function MyPostsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // Simulate API call – replace with: await api.get('/posts/me')
         await new Promise<void>((res) => setTimeout(res, 700));
         if (!cancelled) setBooks(MY_BOOKS);
       } catch (err: unknown) {
@@ -34,15 +35,18 @@ export default function MyPostsPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const handleAdd = (book: Book) => {
+    setBooks(prev => [book, ...prev]);
+  };
+
   return (
     <div className="page">
       <div className="page__header">
         <h2 className="page__title">My Posts</h2>
-        <Btn label="+ Add book" />
+        <Btn label="+ Add book" onClick={() => setAddOpen(true)} />
       </div>
       <div className="page__divider" />
 
-      {/* Loading */}
       {isLoading && (
         <div>
           {Array.from({ length: 2 }).map((_, i) => <BookCardSkeleton key={i} />)}
@@ -50,7 +54,6 @@ export default function MyPostsPage() {
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div className="feed__error" role="alert">
           <span>⚠ {error}</span>
@@ -58,20 +61,22 @@ export default function MyPostsPage() {
         </div>
       )}
 
-      {/* Empty state */}
       {!isLoading && !error && books.length === 0 && (
         <div className="my-posts__empty">
           <div>📖</div>
           <p>You haven't posted any books yet.</p>
-          <Btn label="Post your first book" />
+          <Btn label="Post your first book" onClick={() => setAddOpen(true)} />
         </div>
       )}
 
-      {/* Book list */}
       {!isLoading && !error && books.length > 0 && (
         <div>
           {books.map(b => <BookCard key={b.id} book={b} myPost />)}
         </div>
+      )}
+
+      {addOpen && (
+        <AddPostModal onClose={() => setAddOpen(false)} onAdd={handleAdd} />
       )}
     </div>
   );

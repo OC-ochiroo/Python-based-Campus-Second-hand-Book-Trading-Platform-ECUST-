@@ -21,11 +21,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       const res = await api.post('/auth/register', {
-        name: data.name,
+        username: data.username,
         email: data.email,
         password: data.password,
-        wechat_username: data.wechat_username || undefined,
-        age: data.age || undefined,
       })
       setUser(res.data.user)
       navigate('/feed')
@@ -54,10 +52,10 @@ export default function RegisterPage() {
           )}
 
           <div className="auth__field">
-            <label className="auth__label">Name</label>
-            <input className={`auth__input ${errors.name ? 'auth__input--error' : ''}`}
-              placeholder="Your full name" {...register('name')} aria-invalid={!!errors.name} />
-            {errors.name && <span className="auth__error" role="alert">{errors.name.message}</span>}
+            <label className="auth__label">Username</label>
+            <input className={`auth__input ${errors.username ? 'auth__input--error' : ''}`}
+              placeholder="your_username" {...register('username')} aria-invalid={!!errors.username} />
+            {errors.username && <span className="auth__error" role="alert">{errors.username.message}</span>}
           </div>
 
           <div className="auth__field">

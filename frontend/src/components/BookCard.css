@@ -8,10 +8,6 @@
   transition: opacity 0.2s;
 }
 
-.book-card:hover {
-  opacity: 0.7;
-}
-
 .book-card__cover {
   width: 80px;
   height: 108px;
@@ -57,4 +53,117 @@
   flex-direction: column;
   gap: 8px;
   padding-top: 4px;
+}
+
+/* ── Comments toggle ──────────────────── */
+.book-card__comments-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.08em;
+  padding: 0;
+  margin-top: 12px;
+  display: block;
+  transition: color 0.15s;
+}
+
+.book-card__comments-toggle:hover {
+  color: var(--color-ink);
+}
+
+/* ── Comments section ─────────────────── */
+.book-card__comments {
+  margin-top: 14px;
+  border-left: 2px solid var(--color-border);
+  padding-left: 14px;
+  animation: comments-in 0.15s ease;
+}
+
+@keyframes comments-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.book-card__no-comments {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  color: var(--color-ink-faint);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.book-card__comment {
+  margin-bottom: 12px;
+}
+
+.book-card__comment-author {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: 0.06em;
+  margin-right: 8px;
+}
+
+.book-card__comment-date {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--color-ink-faint);
+  letter-spacing: 0.06em;
+}
+
+.book-card__comment-text {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  margin-top: 3px;
+}
+
+/* ── Comment input ────────────────────── */
+.book-card__comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.book-card__comment-input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--color-border-input);
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-ink);
+  background: transparent;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.book-card__comment-input:focus {
+  border-color: var(--color-ink);
+}
+
+.book-card__comment-submit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+
+.book-card__comment-submit:hover:not(:disabled) {
+  color: var(--color-ink);
+}
+
+.book-card__comment-submit:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
