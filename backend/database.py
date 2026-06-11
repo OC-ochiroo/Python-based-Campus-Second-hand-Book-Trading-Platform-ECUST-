@@ -4,7 +4,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 import os
-
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./books.db")
 
 engine = create_engine(

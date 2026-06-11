@@ -7,49 +7,51 @@ import schemas
 from auth import hash_password
 
 
-# ── User CRUD (Kaiyi's — unchanged) ──────────────────────────────────────────
+# ─── Users ────────────────────────────────────────────────────────────────────
 
 def get_user_by_email(db: Session, email: str):
     try:
         return db.query(models.User).filter(models.User.email == email).first()
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error while fetching user by email: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}") from e
 
 
 def create_user(db: Session, user: schemas.UserCreate):
     try:
         hashed_pw = hash_password(user.password)
-        db_user = models.User(
-            username=user.username,
-            email=user.email,
-            hashed_password=hashed_pw
-        )
+        db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_pw)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
         return db_user
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error while creating user: {str(e)}") from e
-    except HTTPException:
-        raise
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Unexpected error while creating user: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"DB error creating user: {str(e)}") from e
 
 
 def get_users(db: Session):
-    try:
-        return db.query(models.User).all()
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error while fetching users: {str(e)}") from e
+    return db.query(models.User).all()
 
 
 def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
+def update_user(db: Session, user_id: int, payload: schemas.ProfileUpdate):
     try:
-        return db.query(models.User).filter(models.User.id == user_id).first()
+        user = get_user(db, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if payload.wechat_username is not None:
+            user.wechat_username = payload.wechat_username
+        if payload.age is not None:
+            user.age = payload.age
+        db.commit()
+        db.refresh(user)
+        return user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error while fetching user: {str(e)}") from e
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error updating user: {str(e)}") from e
 
 
 def delete_user(db: Session, user_id: int):
@@ -61,127 +63,123 @@ def delete_user(db: Session, user_id: int):
         return user
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error while deleting user: {str(e)}") from e
-    except HTTPException:
-        raise
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Unexpected error while deleting user: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"DB error deleting user: {str(e)}") from e
 
 
-# ── Post CRUD ─────────────────────────────────────────────────────────────────
+# ─── Posts ────────────────────────────────────────────────────────────────────
 
-def _post_to_dict(post: models.Post, db: Session) -> dict:
-    """Attach owner_username and owner_wechat — matches frontend Post type."""
-    user = db.query(models.User).filter(models.User.id == post.user_id).first()
-    return {
-        "id": post.id,
-        "user_id": post.user_id,
-        "owner_username": user.username if user else "unknown",
-        "owner_wechat": user.wechat_username if user else None,
-        "title": post.title,
-        "author": post.author,
-        "year": post.year,
-        "rating": post.rating,
-        "price": post.price,
-        "description": post.description,
-        "status": post.status,
-        "created_at": post.created_at,
-        "updated_at": post.updated_at,
-    }
+def get_posts(db: Session):
+    return db.query(models.Post).order_by(models.Post.created_at.desc()).all()
 
 
-def get_all_posts(db: Session) -> list[dict]:
-    try:
-        posts = db.query(models.Post).order_by(models.Post.created_at.desc()).all()
-        return [_post_to_dict(p, db) for p in posts]
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error fetching posts: {str(e)}") from e
+def get_posts_by_user(db: Session, user_id: int):
+    return db.query(models.Post).filter(models.Post.user_id == user_id).order_by(models.Post.created_at.desc()).all()
 
 
-def get_posts_by_user(db: Session, user_id: int) -> list[dict]:
-    try:
-        posts = (
-            db.query(models.Post)
-            .filter(models.Post.user_id == user_id)
-            .order_by(models.Post.created_at.desc())
-            .all()
-        )
-        return [_post_to_dict(p, db) for p in posts]
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error fetching user posts: {str(e)}") from e
+def get_post(db: Session, post_id: int):
+    return db.query(models.Post).filter(models.Post.id == post_id).first()
 
 
-def create_post(db: Session, post_data: schemas.PostCreate, user_id: int) -> dict:
+def create_post(db: Session, user_id: int, payload: schemas.PostCreate):
     try:
         post = models.Post(
             user_id=user_id,
-            title=post_data.title,
-            author=post_data.author,
-            year=post_data.year,
-            rating=post_data.rating,
-            price=post_data.price,
-            description=post_data.description,
-            status=post_data.status,
+            title=payload.title,
+            author=payload.author,
+            year=payload.year,
+            rating=payload.rating,
+            price=payload.price,
+            description=payload.description,
         )
         db.add(post)
         db.commit()
         db.refresh(post)
-        return _post_to_dict(post, db)
+        return post
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error creating post: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"DB error creating post: {str(e)}") from e
 
 
-# ── Comment CRUD ──────────────────────────────────────────────────────────────
-
-def _comment_to_dict(comment: models.Comment, db: Session) -> dict:
-    """Uses author_username and text — matches frontend Comment type."""
-    user = db.query(models.User).filter(models.User.id == comment.user_id).first()
-    return {
-        "id": comment.id,
-        "post_id": comment.post_id,
-        "user_id": comment.user_id,
-        "author_username": user.username if user else "unknown",
-        "text": comment.content,
-        "created_at": comment.created_at,
-    }
-
-
-def get_comments_by_post(db: Session, post_id: int) -> list[dict]:
+def update_post(db: Session, post_id: int, payload: schemas.PostUpdate):
     try:
-        post = db.query(models.Post).filter(models.Post.id == post_id).first()
+        post = get_post(db, post_id)
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
-        comments = (
-            db.query(models.Comment)
-            .filter(models.Comment.post_id == post_id)
-            .order_by(models.Comment.created_at.asc())
-            .all()
-        )
-        return [_comment_to_dict(c, db) for c in comments]
-    except HTTPException:
-        raise
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(post, field, value)
+        db.commit()
+        db.refresh(post)
+        return post
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error fetching comments: {str(e)}") from e
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error updating post: {str(e)}") from e
 
 
-def create_comment(db: Session, post_id: int, comment_data: schemas.CommentCreate, user_id: int) -> dict:
+def delete_post(db: Session, post_id: int):
     try:
-        post = db.query(models.Post).filter(models.Post.id == post_id).first()
-        if not post:
-            raise HTTPException(status_code=404, detail="Post not found")
+        db.query(models.Comment).filter(models.Comment.post_id == post_id).delete()
+        post = get_post(db, post_id)
+        if post:
+            db.delete(post)
+            db.commit()
+        return post
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error deleting post: {str(e)}") from e
+
+
+# ─── Comments ─────────────────────────────────────────────────────────────────
+
+def get_comments(db: Session, post_id: int):
+    comments = db.query(models.Comment).filter(models.Comment.post_id == post_id).order_by(models.Comment.created_at.asc()).all()
+    return [
+        {
+            "id": c.id,
+            "post_id": c.post_id,
+            "user_id": c.user_id,
+            "author_username": c.author_username,
+            "text": c.text,
+            "created_at": c.created_at.isoformat(),
+        }
+        for c in comments
+    ]
+
+
+def get_comment(db: Session, comment_id: int):
+    return db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+
+
+def create_comment(db: Session, post_id: int, user_id: int, author_username: str, payload: schemas.CommentCreate):
+    try:
         comment = models.Comment(
             post_id=post_id,
             user_id=user_id,
-            content=comment_data.text,   # frontend sends "text", DB column is "content"
+            author_username=author_username,
+            text=payload.text,
         )
         db.add(comment)
         db.commit()
         db.refresh(comment)
-        return _comment_to_dict(comment, db)
-    except HTTPException:
-        raise
+        return {
+            "id": comment.id,
+            "post_id": comment.post_id,
+            "user_id": comment.user_id,
+            "author_username": comment.author_username,
+            "text": comment.text,
+            "created_at": comment.created_at.isoformat(),
+        }
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error creating comment: {str(e)}") from e
+        raise HTTPException(status_code=500, detail=f"DB error creating comment: {str(e)}") from e
+
+
+def delete_comment(db: Session, comment_id: int):
+    try:
+        comment = get_comment(db, comment_id)
+        if comment:
+            db.delete(comment)
+            db.commit()
+        return comment
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error deleting comment: {str(e)}") from e

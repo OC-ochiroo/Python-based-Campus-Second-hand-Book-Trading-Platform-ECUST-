@@ -1,8 +1,7 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 
-
-# ── User schemas (Kaiyi's — unchanged) ───────────────────────────────────────
 
 class UserCreate(BaseModel):
     username: str
@@ -38,66 +37,43 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ── Post schemas ──────────────────────────────────────────────────────────────
+class ProfileUpdate(BaseModel):
+    wechat_username: Optional[str] = None
+    age: Optional[int] = None
+
 
 class PostCreate(BaseModel):
     title: str
-    author: str | None = None
-    year: int | None = None
-    rating: int | None = None
-    price: float | None = None
-    description: str | None = None
-    status: str = "available"
+    author: Optional[str] = None
+    year: Optional[int] = None
+    rating: Optional[int] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
 
     @field_validator("title")
     @classmethod
     def validate_title(cls, v):
-        if len(v.strip()) == 0:
+        if not v.strip():
             raise ValueError("Title cannot be empty")
         return v
 
 
-class PostResponse(BaseModel):
-    id: int
-    user_id: int
-    # Frontend expects owner_username / owner_wechat (not "username")
-    owner_username: str
-    owner_wechat: str | None
-    title: str
-    author: str | None
-    year: int | None
-    rating: int | None
-    price: float | None
-    description: str | None
-    status: str
-    created_at: datetime
-    updated_at: datetime
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    author: Optional[str] = None
+    year: Optional[int] = None
+    rating: Optional[int] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
 
-    model_config = {"from_attributes": True}
-
-
-# ── Comment schemas ───────────────────────────────────────────────────────────
 
 class CommentCreate(BaseModel):
-    # Frontend sends { text } not { content }
     text: str
 
     @field_validator("text")
     @classmethod
     def validate_text(cls, v):
-        if len(v.strip()) == 0:
+        if not v.strip():
             raise ValueError("Comment cannot be empty")
         return v
-
-
-class CommentResponse(BaseModel):
-    id: int
-    post_id: int
-    user_id: int
-    # Frontend expects author_username (not "username")
-    author_username: str
-    # Frontend expects text (not "content")
-    text: str
-    created_at: datetime
-
-    model_config = {"from_attributes": True}

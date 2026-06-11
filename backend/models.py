@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 
-class User(Base):  # pylint: disable=too-few-public-methods
+class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,7 +17,7 @@ class User(Base):  # pylint: disable=too-few-public-methods
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Post(Base):  # pylint: disable=too-few-public-methods
+class Post(Base):
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -33,17 +33,18 @@ class Post(Base):  # pylint: disable=too-few-public-methods
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
-class Comment(Base):  # pylint: disable=too-few-public-methods
+class Comment(Base):
     __tablename__ = "comment"
 
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content = Column(Text, nullable=False)
+    author_username = Column(String(100), nullable=False)
+    text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Trade(Base):  # pylint: disable=too-few-public-methods
+class Trade(Base):
     __tablename__ = "trade"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -53,7 +54,7 @@ class Trade(Base):  # pylint: disable=too-few-public-methods
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class AuditLog(Base):  # pylint: disable=too-few-public-methods
+class AuditLog(Base):
     __tablename__ = "auditlog"
 
     id = Column(Integer, primary_key=True, index=True)

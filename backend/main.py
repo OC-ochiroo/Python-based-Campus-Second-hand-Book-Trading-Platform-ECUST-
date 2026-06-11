@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import models
-from database import engine
-from routers import router
+from database import engine, SessionLocal
+from routers import auth_router, users_router, posts_router
 
 try:
     models.Base.metadata.create_all(bind=engine)
@@ -22,7 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(posts_router)
 
 
 @app.exception_handler(Exception)
@@ -36,6 +38,18 @@ async def global_exception_handler(_, exc):
 @app.get("/")
 def root():
     return {"message": "Backend running"}
+
+
+@app.on_event("startup")
+def on_startup():
+    from seed import seed
+    db = SessionLocal()
+    try:
+        seed(db)
+    except Exception as e:
+        print(f"[SEED WARNING] Seed failed: {e}")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
