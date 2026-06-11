@@ -1,16 +1,15 @@
 from datetime import datetime
-
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 
-class User(Base):
-    __tablename__ = "user"
+class User(Base):  # pylint: disable=too-few-public-methods
+    __tablename__ = "users"  # updated from "user"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), nullable=False)
+    username = Column(String(100), unique=True, nullable=False)  # added unique=True
     email = Column(String(255), nullable=False, unique=True, index=True)
     hashed_password = Column(String(255), nullable=False)
     wechat_username = Column(String(100))
@@ -18,11 +17,11 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Post(Base):
+class Post(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # updated FK to "users.id"
     title = Column(String(255), nullable=False)
     author = Column(String(100))
     year = Column(Integer)
@@ -34,7 +33,7 @@ class Post(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
-class Trade(Base):
+class Trade(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "trade"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -44,11 +43,11 @@ class Trade(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class AuditLog(Base):
+class AuditLog(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "auditlog"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # updated FK to "users.id"
     action = Column(String(100), nullable=False)
     entity_type = Column(String(100), nullable=False)
     entity_id = Column(Integer)
