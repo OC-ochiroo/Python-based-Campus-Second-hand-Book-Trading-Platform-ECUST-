@@ -7,24 +7,25 @@ SECRET_KEY = "supersecretkey"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# bcrypt hard limit is 72 bytes — truncate silently before hashing
-_BCRYPT_LIMIT = 72
+# truncate_error=False tells bcrypt to silently truncate passwords
+# longer than 72 bytes instead of raising an error
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False,
+)
 
 
 def hash_password(password: str):
     try:
-        truncated = password.encode("utf-8")[:_BCRYPT_LIMIT].decode("utf-8", errors="ignore")
-        return pwd_context.hash(truncated)
+        return pwd_context.hash(password)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to hash password: {str(e)}") from e
 
 
 def verify_password(plain_password, hashed_password):
     try:
-        truncated = plain_password.encode("utf-8")[:_BCRYPT_LIMIT].decode("utf-8", errors="ignore")
-        return pwd_context.verify(truncated, hashed_password)
+        return pwd_context.verify(plain_password, hashed_password)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Password verification error: {str(e)}") from e
 
