@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '../schemas'
 import { useAuth } from '../useAuth'
-import api from '../api'
+import { login } from '../api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import './AuthPage.css'
 
@@ -20,8 +20,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const res = await api.post('/auth/login', data)
-      setUser(res.data.user)
+      const res = await login(data.email, data.password)
+      setUser(res.user)
       navigate('/feed')
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }
