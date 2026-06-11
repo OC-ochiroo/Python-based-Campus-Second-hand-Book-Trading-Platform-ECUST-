@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterFormData } from '../schemas'
 import { useAuth } from '../useAuth'
-import api from '../api'
+import { register as apiRegister } from '../api'
 import LoadingSpinner from '../components/LoadingSpinner'
 import './AuthPage.css'
 
@@ -20,12 +20,8 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const res = await api.post('/auth/register', {
-        username: data.username,
-        email: data.email,
-        password: data.password,
-      })
-      setUser(res.data.user)
+      const res = await apiRegister(data.username, data.email, data.password)
+      setUser(res.user)
       navigate('/feed')
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }

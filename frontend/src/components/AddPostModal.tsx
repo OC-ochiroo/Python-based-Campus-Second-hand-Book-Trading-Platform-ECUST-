@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Book } from "../Types";
+import { createPost } from "../api";
 import "./AddPostModal.css";
 
 interface AddPostModalProps {
@@ -23,8 +24,12 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
   const [rating, setRating] = useState(0);
+  const [price, setPrice] = useState("");
+  const [year, setYear] = useState("");
   const [colorIdx, setColorIdx] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -34,29 +39,57 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
     return e;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
 
-    const newBook: Book = {
-      id: Date.now(),
-      title: title.trim(),
-      author: author.trim(),
-      description: description.trim() || "No description provided.",
-      rating,
-      owner: "me",
-      cover: COVER_COLORS[colorIdx].cover,
-      spine: COVER_COLORS[colorIdx].spine,
-    };
-    onAdd(newBook);
-    onClose();
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const post = await createPost({
+        title: title.trim(),
+        author: author.trim(),
+        description: description.trim() || undefined,
+        rating,
+        price: price ? parseFloat(price) : undefined,
+        year: year ? parseInt(year, 10) : undefined,
+      });
+
+      const c = COVER_COLORS[colorIdx];
+      const book: Book = {
+        id: post.id,
+        title: post.title,
+        author: post.author ?? author,
+        rating: post.rating ?? rating,
+        description: post.description ?? "",
+        owner: post.owner_username ?? "me",
+        owner_wechat: post.owner_wechat,
+        cover: c.cover,
+        spine: c.spine,
+        year: post.year,
+        price: post.price,
+        status: post.status,
+        created_at: post.created_at,
+      };
+      onAdd(book);
+      onClose();
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setSubmitError(axiosErr?.response?.data?.detail ?? "Failed to create post. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal add-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal add-modal" onClick={(e) => e.stopPropagation()}>
         <button className="modal__close" onClick={onClose}>✕</button>
         <h3 className="modal__title" style={{ textAlign: "left", marginBottom: 24 }}>Post a book</h3>
+
+        {submitError && (
+          <div className="add-modal__submit-error" role="alert">⚠ {submitError}</div>
+        )}
 
         <div className="add-modal__field">
           <label className="add-modal__label">Title</label>
@@ -64,7 +97,7 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
             className={`add-modal__input${errors.title ? " add-modal__input--error" : ""}`}
             placeholder="e.g. Clean Code"
             value={title}
-            onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: "" })); }}
+            onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: "" })); }}
           />
           {errors.title && <span className="add-modal__error">{errors.title}</span>}
         </div>
@@ -75,7 +108,7 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
             className={`add-modal__input${errors.author ? " add-modal__input--error" : ""}`}
             placeholder="e.g. Robert C. Martin"
             value={author}
-            onChange={e => { setAuthor(e.target.value); setErrors(p => ({ ...p, author: "" })); }}
+            onChange={(e) => { setAuthor(e.target.value); setErrors((p) => ({ ...p, author: "" })); }}
           />
           {errors.author && <span className="add-modal__error">{errors.author}</span>}
         </div>
@@ -86,19 +119,40 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
             className="add-modal__textarea"
             placeholder="What's this book about?"
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             rows={3}
           />
+        </div>
+
+        <div className="add-modal__field" style={{ display: "flex", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <label className="add-modal__label">Year</label>
+            <input
+              className="add-modal__input"
+              type="number" placeholder="e.g. 2020" min="1900" max="2100"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label className="add-modal__label">Price (¥)</label>
+            <input
+              className="add-modal__input"
+              type="number" placeholder="e.g. 30" min="0" step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="add-modal__field">
           <label className="add-modal__label">Rating</label>
           <div className="add-modal__stars">
-            {[1, 2, 3, 4, 5].map(s => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <button
                 key={s}
                 className={`add-modal__star${rating >= s ? " add-modal__star--active" : ""}`}
-                onClick={() => { setRating(s); setErrors(p => ({ ...p, rating: "" })); }}
+                onClick={() => { setRating(s); setErrors((p) => ({ ...p, rating: "" })); }}
               >●</button>
             ))}
           </div>
@@ -120,8 +174,10 @@ export default function AddPostModal({ onClose, onAdd }: AddPostModalProps) {
         </div>
 
         <div className="add-modal__actions">
-          <button className="btn btn--primary" onClick={handleSubmit}>Post book</button>
-          <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn--primary" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Posting…" : "Post book"}
+          </button>
+          <button className="btn btn--secondary" onClick={onClose} disabled={isSubmitting}>Cancel</button>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { User } from './Types.ts'
-import api from './api'
+import type { User } from './Types'
+import { getMe, logout as apiLogout } from './api'
 import { AuthContext } from './useAuth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -11,10 +11,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await api.get('/auth/me')
-        setUser(res.data.user)
-      } catch (err) {
-        console.log(err)
+        const data = await getMe()
+        setUser(data.user)
+      } catch {
         setUser(null)
       } finally {
         setIsLoading(false)
@@ -25,20 +24,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout')
+      await apiLogout()
     } finally {
       setUser(null)
     }
   }
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      setUser,
-      isLoggedIn: !!user,
-      isLoading,
-      logout
-    }}>
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn: !!user, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   )

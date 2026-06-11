@@ -1,18 +1,26 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { profileSchema, type ProfileFormData } from '../schemas'
 import { useAuth } from '../useAuth'
-import { MY_BOOKS } from '../data'
+import type { Book } from '../Types'
+import { getMyPosts, updateProfile } from '../api'
 import Stars from '../components/Stars'
 import LoadingSpinner from '../components/LoadingSpinner'
-import api from '../api'
 import './ProfilePage.css'
+
+const COVER_PALETTE = [
+  { cover: "#2c3e50", spine: "#1a252f" },
+  { cover: "#5c4a1e", spine: "#3d3014" },
+  { cover: "#4a2040", spine: "#321529" },
+  { cover: "#1e3a5f", spine: "#132540" },
+];
 
 export default function ProfilePage() {
   const navigate = useNavigate()
   const { user, setUser } = useAuth()
+  const [recentBooks, setRecentBooks] = useState<Book[]>([])
 
   const {
     register,
@@ -23,7 +31,7 @@ export default function ProfilePage() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
+      name: user?.name || user?.username || '',
       wechat_username: user?.wechat_username || '',
       age: user?.age,
     },
@@ -32,21 +40,44 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       reset({
-        name: user.name,
+        name: user.name || user.username,
         wechat_username: user.wechat_username || '',
         age: user.age,
       })
     }
   }, [user, reset])
 
+  useEffect(() => {
+    let cancelled = false
+    getMyPosts()
+      .then((posts) => {
+        if (!cancelled) {
+          setRecentBooks(
+            posts.slice(0, 2).map((p, i) => ({
+              id: p.id,
+              title: p.title,
+              author: p.author ?? '',
+              rating: p.rating ?? 0,
+              description: p.description ?? '',
+              owner: p.owner_username ?? 'me',
+              cover: COVER_PALETTE[i % COVER_PALETTE.length].cover,
+              spine: COVER_PALETTE[i % COVER_PALETTE.length].spine,
+            }))
+          )
+        }
+      })
+      .catch(() => { /* recent posts are non-critical, fail silently */ })
+    return () => { cancelled = true }
+  }, [])
+
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      const res = await api.put('/users/me', {
-        name: data.name,
+      const updated = await updateProfile({
         wechat_username: data.wechat_username || undefined,
         age: data.age || undefined,
       })
-      setUser(res.data)
+      // merge returned fields back into auth context user
+      setUser({ ...user!, ...updated })
       reset(data)
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }
@@ -55,7 +86,7 @@ export default function ProfilePage() {
     }
   }
 
-  const initials = user?.name?.charAt(0).toUpperCase() || '?'
+  const initials = (user?.name || user?.username)?.charAt(0).toUpperCase() ?? '?'
 
   return (
     <div className="page">
@@ -75,7 +106,7 @@ export default function ProfilePage() {
 
             <div className="profile__fields">
               <div className="field">
-                <label className="field__label">Name</label>
+                <label className="field__label">Display name</label>
                 <input className={`field__input ${errors.name ? 'field__input--error' : ''}`}
                   {...register('name')} aria-invalid={!!errors.name} />
                 {errors.name && <span className="profile__error" role="alert">{errors.name.message}</span>}
@@ -126,7 +157,11 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {MY_BOOKS.slice(0, 2).map(b => (
+          {recentBooks.length === 0 && (
+            <p style={{ color: 'var(--color-ink-muted)', fontSize: 14 }}>No posts yet.</p>
+          )}
+
+          {recentBooks.map((b) => (
             <div key={b.id} className="profile__book-item">
               <div className="profile__book-cover" style={{ background: b.cover }} />
               <div>
