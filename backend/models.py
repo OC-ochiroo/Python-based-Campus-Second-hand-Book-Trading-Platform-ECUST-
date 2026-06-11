@@ -6,10 +6,10 @@ Base = declarative_base()
 
 
 class User(Base):  # pylint: disable=too-few-public-methods
-    __tablename__ = "users"  # updated from "user"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True, nullable=False)  # added unique=True
+    username = Column(String(100), unique=True, nullable=False)
     email = Column(String(255), nullable=False, unique=True, index=True)
     hashed_password = Column(String(255), nullable=False)
     wechat_username = Column(String(100))
@@ -21,7 +21,7 @@ class Post(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # updated FK to "users.id"
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(255), nullable=False)
     author = Column(String(100))
     year = Column(Integer)
@@ -31,6 +31,16 @@ class Post(Base):  # pylint: disable=too-few-public-methods
     status = Column(String(50), default="available")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class Comment(Base):  # pylint: disable=too-few-public-methods
+    __tablename__ = "comment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class Trade(Base):  # pylint: disable=too-few-public-methods
@@ -47,7 +57,7 @@ class AuditLog(Base):  # pylint: disable=too-few-public-methods
     __tablename__ = "auditlog"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # updated FK to "users.id"
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     action = Column(String(100), nullable=False)
     entity_type = Column(String(100), nullable=False)
     entity_id = Column(Integer)
